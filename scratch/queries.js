@@ -7,27 +7,27 @@ const Note = require('../models/note');
 
 
 // Find/Search all notes
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    const searchTerm = 'lady gaga';
-    let filter = {};
-
-    if (searchTerm) {
-      filter.title = {$regex: searchTerm};
-    }
-
-    return Note.find(filter).sort({ updatedAt: 'desc' });
-  })
-  .then(results => {
-    console.log(results);
-  })
-  .then(() => {
-    return mongoose.disconnect();
-  })
-  .catch(err => {
-    console.error(`ERROR: ${err.message}`);
-    console.error(err);
-  });
+// mongoose.connect(MONGODB_URI)
+//   .then(() => {
+//     const searchTerm = 'lady gaga';
+//     let filter = {};
+//     if (searchTerm) {
+//       filter.title = {$regex: searchTerm};
+//     }
+//     return Note
+//       .find(filter)
+//       .sort({updatedAt: 'desc'});
+//   })
+//   .then(results => {
+//     console.log(results);
+//   })
+//   .then(() => {
+//     return mongoose.disconnect();
+//   })
+//   .catch(err => {
+//     console.error(`ERROR: ${err.message}`);
+//     console.error(err);
+//   });
 
 
 // Find by ID
