@@ -3,9 +3,9 @@
 const express = require('express');
 const morgan = require('morgan');
 
-const { PORT } = require('./config');
+const { PORT } = require('./config.js');
 
-const notesRouter = require('./routes/notes');
+const notesRouter = require('./routes/notes.js');
 
 // Create an Express application
 const app = express();
