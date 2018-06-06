@@ -32,7 +32,7 @@ router.get('/', (req, res, next) => {
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
-  const id = req.params.id;
+  const { id } = req.params;
 
   Note
     .findById(id)
@@ -48,9 +48,21 @@ router.post('/', (req, res, next) => {
   const { title, content } = req.body;
   const newNote = {title, content};
 
+  /***** Never trust users - validate input *****/
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
   Note
     .create(newNote)
-    .then(result => res.json(result))
+    .then(result => {
+      res
+        .location(`${req.originalUrl}/${result.id}`)
+        .status(201)
+        .json(result);
+    })
     .catch(err => next(err));
 
   // console.log('Create a Note');
@@ -59,9 +71,15 @@ router.post('/', (req, res, next) => {
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
-  const id = req.params.id;
+  const { id } = req.params;
   const { title, content } = req.body;
   const updateNote = {title, content};
+
+  if (!title) {
+    const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
 
   Note
     .findByIdAndUpdate(id, updateNote, {new: true})
@@ -74,13 +92,15 @@ router.put('/:id', (req, res, next) => {
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
-  const id = req.params.id;
+  const { id } = req.params;
 
   Note
     .findByIdAndRemove(id)
     .then(() => {
       console.log('Deleted note id:' + id);
-      res.status(204).end();
+      res
+        .status(204)
+        .end();
     })
     .catch(err => next(err));
   // console.log('Delete a Note');
