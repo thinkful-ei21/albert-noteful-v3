@@ -43,6 +43,11 @@ app.use((err, req, res, next) => {
   }
 });
 
+// catch-all endpoint if client makes request to non-existent endpoint
+app.use('*', (req, res) => {
+  res.status(404).json({ message: 'Not Found' });
+});
+
 // Connect to DB and Listen for incoming connections
 if (process.env.NODE_ENV !== 'test') {
   mongoose.connect(MONGODB_URI)

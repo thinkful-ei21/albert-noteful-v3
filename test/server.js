@@ -11,45 +11,38 @@ const expect = chai.expect;
 
 chai.use(chaiHttp);
 
-describe('Reality Check', () => {
-
-  it('true should be true', () => {
+describe('Reality Check', function() {
+  it('true should be true', function() {
     expect(true).to.be.true;
   });
 
-  it('2 + 2 should equal 4', () => {
+  it('2 + 2 should equal 4', function() {
     expect(2 + 2).to.equal(4);
   });
-
 });
 
-describe('Environment', () => {
-
-  it('NODE_ENV should be "test"', () => {
+describe('Environment', function() {
+  it('NODE_ENV should be "test"', function() {
     expect(process.env.NODE_ENV).to.equal('test');
   });
-
 });
 
-describe('Basic Express setup', () => {
+describe('Basic Express setup', function() {
 
-  describe('Express static', () => {
-
-    it('GET request "/" should return the index page', () => {
+  describe('Express static', function() {
+    it('GET request "/" should return the index page', function() {
       return chai.request(app)
         .get('/')
-        .then(function (res) {
+        .then(function(res) {
           expect(res).to.exist;
           expect(res).to.have.status(200);
           expect(res).to.be.html;
         });
     });
-
   });
 
-  describe('404 handler', () => {
-
-    it('should respond with 404 when given a bad path', () => {
+  describe('404 handler', function() {
+    it('should respond with 404 when given a bad path', function() {
       return chai.request(app)
         .get('/bad/path')
         .catch(err => err.response)
@@ -57,6 +50,6 @@ describe('Basic Express setup', () => {
           expect(res).to.have.status(404);
         });
     });
-
   });
+
 });
