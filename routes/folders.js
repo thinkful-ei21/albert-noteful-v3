@@ -1,2 +1,119 @@
 'use strict';
 
+const express = require('express');
+const mongoose = require('mongoose');
+
+const Folder = require('../models/folder.js');
+const Note = require('../models/note.js');
+
+const router = express.Router();
+
+// GET (read) all folders and sorted by name
+router.get('/', (req, res, next) => {
+  Folder
+    .find()
+    .sort({name: 'asc'})
+    .then(results => res.json(results))
+    .catch(err => next(err));
+});
+
+// GET (read) folder by ID
+router.get('/:id', (req, res, next) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  Folder
+    .findById(id)
+    .then(result => res.json(result))
+    .catch(err => next(err));
+});
+
+// POST (create) a new folder
+router.post('/', (req, res, next) => {
+  const { name } = req.body;
+  const newFolder = { name };
+  if(!name) {
+    const err = new Error();
+    err.message = 'Error: Invalid folder name.';
+    err.status = 400;
+    return next(err);
+  }
+  Folder
+    .create(newFolder)
+    .then(result => {
+      res
+        .location(`${req.originalUrl}/${result.id}`)
+        .status(201)
+        .json(result);
+    })
+    .catch(err => {
+      if (err.code === 11000) {
+        err = new Error();
+        err.message = 'Error: Folder already exists';
+        err.status = 400;
+      }
+      next(err);
+    });
+});
+
+// PUT (update) a folder by ID
+router.put('/:id', (req, res, next) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  const updateFolder = { name };
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error();
+    err.message = 'Error: Invalid folder ID.';
+    err.status = 400;
+    return next(err);
+  }
+  Folder.findByIdAndUpdate(id, updateFolder, {new: true})
+    .then(result => res.json(result))
+    .catch(err => next(err));
+});
+
+// DELETE (delete) a folder by ID
+router.delete('/:id', (req, res, next) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error();
+    err.message = 'Error: Invalid folder ID.';
+    err.status = 400;
+    return next(err);
+  }
+  // Folder.findByIdAndRemove(id)
+  //   .then(() => {
+  //     console.log('Deleted note id:' + id);
+  //     res.sendStatus(204);
+  //   })
+
+  // ON DELETE SET NULL equivalent
+  //   .then(() => {
+  //     Note.deleteMany({folderId: id});
+  //   })
+  //   .catch(err => next(err));
+
+  // ON DELETE SET NULL equivalent
+  const folderRemovePromise = Folder.findByIdAndRemove(id);
+  // ON DELETE CASCADE equivalent
+  // const noteRemovePromise = Note.deleteMany({ folderId: id });
+
+  const noteRemovePromise = Note.updateMany(
+    { folderId: id },
+    { $unset: { folderId: '' } }
+  );
+
+  Promise.all([folderRemovePromise, noteRemovePromise])
+    .then(() => {
+      res.status(204).end();
+    })
+    .catch(err => {
+      next(err);
+    });
+});
+
+
+module.exports = router;
