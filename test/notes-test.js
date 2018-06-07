@@ -36,51 +36,53 @@ describe('NOTE TESTING', function() {
   });
 
   describe('GET /api/notes/', function() {
-    it('description', function() {
-      let allDbNotes;
-      // 1) Call DB for list of notes,
+    it('should return a list of notes', function() {
+      let dbNotes;
+      // 1) call DB for all notes
       return Note
         .find()
-        .then(function(allNotes) {
-          allDbNotes = allNotes;
-          // 2) then call the API for list of notes,
+        .then(function(notes) {
+          dbNotes = notes;
+          // 2) call the API for all notes
           return chai
             .request(app)
             .get('/api/notes/');
         })
-        .then(function(allApiNotes) {
-          expect(allApiNotes).to.have.status(200);
-          expect(allApiNotes).to.be.json;
-          // 3) then compare DB results to API response.
-          expect(allApiNotes.body).to.be.an('array');
-          expect(allApiNotes.body.length).to.equal(allDbNotes.length);
+        // 3) check API notes
+        .then(function(apiNotes) {
+          expect(apiNotes).to.have.status(200);
+          expect(apiNotes).to.be.json;
+          // 4) compare DB notes to API notes
+          expect(apiNotes.body).to.be.an('array');
+          expect(apiNotes.body.length).to.equal(dbNotes.length);
         });
     });
   });
 
   describe('GET /api/notes/:id', function() {
-    it('description', function() {
+    it('should return a single note when provided a valid corresponding ID', function() {
       let dbNote;
-      // 1) Call DB for a random note,
+      // 1) call DB for a random note
       return Note
         .findOne()
         .then(function(note) {
           dbNote = note;
-          // 2) then call API with corresponding note ID,
+          // 2) call API for note with corresponding ID,
           return chai
             .request(app)
             .get(`/api/notes/${dbNote.id}`);
         })
+        // 3) check API note
         .then(function(apiNote) {
           expect(apiNote).to.have.status(200);
           expect(apiNote).to.be.json;
           expect(apiNote.body).to.be.an('object');
           expect(apiNote.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
-          // 3) then compare DB results to API response.
+          // 4) compare DB note to API note
           expect(apiNote.body.id).to.equal(dbNote.id);
           expect(apiNote.body.title).to.equal(dbNote.title);
-          expect(apiNote.body.content).to.equal(dbNote.content);
-          expect(new Date(apiNote.body.createdAt)).to.eql(dbNote.createdAt);
+          expect(apiNote.body.content).to.equal(dbNote.content); // .equal() means strict equal
+          expect(new Date(apiNote.body.createdAt)).to.eql(dbNote.createdAt); // .eql() means deep equal
           expect(new Date(apiNote.body.updatedAt)).to.eql(dbNote.updatedAt);
         });
     });
@@ -93,7 +95,7 @@ describe('NOTE TESTING', function() {
         'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
       };
       let apiResponse;
-      // 1) Call API to create note,
+      // 1) call API to create note
       return chai
         .request(app)
         .post('/api/notes')
@@ -105,15 +107,16 @@ describe('NOTE TESTING', function() {
           expect(apiResponse).to.be.json;
           expect(apiResponse.body).to.be.an('object');
           expect(apiResponse.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
-          // 2) then call DB for new note by ID,
-          return Note.findById(apiResponse.body.id);
+          // 2) call DB for new note by its ID
+          return Note
+            .findById(apiResponse.body.id);
         })
-        // 3) then compare API response to DB results.
+        // 3) then compare API response to DB response
         .then(function(dbResponse) {
           expect(apiResponse.body.id).to.equal(dbResponse.id);
           expect(apiResponse.body.title).to.equal(dbResponse.title);
-          expect(apiResponse.body.content).to.equal(dbResponse.content);
-          expect(new Date(apiResponse.body.createdAt)).to.eql(dbResponse.createdAt);
+          expect(apiResponse.body.content).to.equal(dbResponse.content);  // .equal() means strict equal
+          expect(new Date(apiResponse.body.createdAt)).to.eql(dbResponse.createdAt);  // eql() means deep equal
           expect(new Date(apiResponse.body.updatedAt)).to.eql(dbResponse.updatedAt);
         });
     });
@@ -125,47 +128,59 @@ describe('NOTE TESTING', function() {
         'title': 'Updated Title',
         'content': 'Updated contents.'
       };
-      let id;
+      let randomNote;
+      // 1) call DB for a random note
       return Note
         .findOne()
         .then(function(note) {
-          id = note.id;
+          randomNote = note;
+          // 2) call API to update note with corresponding ID
           return chai
             .request(app)
-            .put(`/api/notes/${id}`)
+            .put(`/api/notes/${randomNote.id}`)
             .send(updateNote);
         })
-        .then(function(res) {
-          expect(res).to.have.status(200);
-          expect(res.body.title).to.equal(updateNote.title);
-          expect(res.body.content).to.equal(updateNote.content);
-          return Note.findById(id);
+        // 3) check to see if API response is same as updateNote
+        .then(function(apiResponse) {
+          expect(apiResponse).to.have.status(200);
+          expect(apiResponse.body.title).to.equal(updateNote.title);
+          expect(apiResponse.body.content).to.equal(updateNote.content);
+          // 4) call DB for corresponding note
+          return Note
+            .findById(randomNote.id);
         })
-        .then(function(res) {
-          expect(res).to.be.an('object');
-          expect(res.title).to.equal(updateNote.title);
-          expect(res.content).to.equal(updateNote.content);
+        // 5) check to see if DB response is same as updateNote
+        .then(function(dbResponse) {
+          expect(dbResponse).to.be.an('object');
+          expect(dbResponse.title).to.equal(updateNote.title);
+          expect(dbResponse.content).to.equal(updateNote.content);
         });
     });
   });
 
   describe('DELTE /api/notes/:id', function() {
     it('should delete a note when provided a valid corresponding ID', function() {
-      let id;
+      let dbNote;
+      // 1) Call DB for a random note,
       return Note
         .findOne()
         .then(function(note) {
-          id = note.id;
+          dbNote = note;
+          // 2) call API to delete note with corresponding ID
           return chai
             .request(app)
-            .delete(`/api/notes/${id}`);
+            .delete(`/api/notes/${dbNote.id}`);
         })
-        .then(function(res) {
-          expect(res).to.have.status(204);
-          return Note.findById(id);
+        //3) check API response for Status 204
+        .then(function(apiResponse) {
+          expect(apiResponse).to.have.status(204);
+          // 4) call DB for corresponding note
+          return Note
+            .findById(dbNote.id);
         })
-        .then(function(res) {
-          expect(res).to.be.null;
+        // 5) check to see if DB response with null
+        .then(function(dbResponse) {
+          expect(dbResponse).to.be.null;
         });
     });
   });
