@@ -88,11 +88,39 @@ describe('NOTE TESTING', function() {
     });
   });
 
+  describe('GET /api/notes', function() {
+    it('should return a list of notes with titles matching a search term', function() {
+      const searchTerm = 'ways';
+      let apiResponse;
+      // 1) call API for list of notes with titles matching search term
+      return chai
+        .request(app)
+        .get(`/api/notes/?searchTerm=${searchTerm}`)
+        .then(function(res) {
+          apiResponse = res;
+          // 2) check API response, there should be 2 notes where titles contain the word 'ways'
+          expect(apiResponse).to.have.status(200);
+          expect(apiResponse).to.be.json;
+          expect(apiResponse.body).to.be.an('array');
+          expect(apiResponse.body.length).to.equal(2);
+          // 3) call DB with same search term
+          return Note
+            .find({title: {$regex: searchTerm}})
+            .sort({updatedAt: 'desc'});
+        })
+        .then(function(dbResponse) {
+          // 4) compare DB response to API response
+          expect(dbResponse).to.be.an('array');
+          expect(apiResponse.body.length).to.equal(dbResponse.length);
+        });
+    });
+  });
+
   describe('POST /api/notes', function() {
     it('should create and return a new item when provided valid data', function() {
       const newNote = {
-        'title': 'The best article about cats ever!',
-        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
+        title: 'The best article about cats ever!',
+        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
       };
       let apiResponse;
       // 1) call API to create note
@@ -116,7 +144,7 @@ describe('NOTE TESTING', function() {
           expect(apiResponse.body.id).to.equal(dbResponse.id);
           expect(apiResponse.body.title).to.equal(dbResponse.title);
           expect(apiResponse.body.content).to.equal(dbResponse.content);  // .equal() means strict equal
-          expect(new Date(apiResponse.body.createdAt)).to.eql(dbResponse.createdAt);  // eql() means deep equal
+          expect(new Date(apiResponse.body.createdAt)).to.eql(dbResponse.createdAt);  // .eql() means deep equal
           expect(new Date(apiResponse.body.updatedAt)).to.eql(dbResponse.updatedAt);
         });
     });
@@ -125,8 +153,8 @@ describe('NOTE TESTING', function() {
   describe('PUT api/notes/:id', function() {
     it('should update an existing note when provided a valid corresponding data', function() {
       const updateNote = {
-        'title': 'Updated Title',
-        'content': 'Updated contents.'
+        title: 'Updated Title',
+        content: 'Updated contents.'
       };
       let randomNote;
       // 1) call DB for a random note
