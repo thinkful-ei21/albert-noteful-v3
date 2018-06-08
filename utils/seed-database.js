@@ -19,8 +19,11 @@ mongoose.connect(MONGODB_URI)
     console.info('Seeding Database');
     return Promise.all([
       Note.insertMany(seedNotes),
-      Folder.insertMany(seedFolders),
+      
+      // This tells Mongo to index the Folders data immediately.
+      // Index is used enforce the unique folder names rule you created in the schema.
       Folder.createIndexes(),
+      Folder.insertMany(seedFolders),
     ]);
   })
   .then(() => {

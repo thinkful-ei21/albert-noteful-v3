@@ -53,7 +53,7 @@ router.post('/', (req, res, next) => {
 
   if(!name) {
     const err = new Error();
-    err.message = 'Error: Invalid folder name.';
+    err.message = 'Error: Missing `name` in request body.';
     err.status = 400;
     return next(err);
   }
@@ -84,7 +84,7 @@ router.put('/:id', (req, res, next) => {
 
   if(!name) {
     const err = new Error();
-    err.message = 'Error: Missing `title` in request body.';
+    err.message = 'Error: Missing `name` in request body.';
     err.status = 400;
     return next(err);
   }
