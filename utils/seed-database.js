@@ -5,9 +5,11 @@ const mongoose = require('mongoose');
 const { MONGODB_URI } = require('../config.js');
 
 const Folder = require('../models/folder.js');
+const Tag = require('../models/tag.js');
 const Note = require('../models/note.js');
 
 const seedFolders = require('../db/seed/folders.json');
+const seedTags = require('../db/seed/tags.json');
 const seedNotes = require('../db/seed/notes.json');
 
 mongoose.connect(MONGODB_URI)
@@ -19,11 +21,15 @@ mongoose.connect(MONGODB_URI)
     console.info('Seeding Database');
     return Promise.all([
       Note.insertMany(seedNotes),
-      
-      // This tells Mongo to index the Folders data immediately.
-      // Index is used enforce the unique folder names rule you created in the schema.
-      Folder.createIndexes(),
+
       Folder.insertMany(seedFolders),
+      Tag.insertMany(seedTags),
+
+      // By default, mongodb index data automatically.
+      // But calling .createIndexes() here tells Mongo to start indexing immediately.
+      // Index enforces the {unique: true} rule created in the schema.
+      Folder.createIndexes(),
+      Tag.createIndexes()
     ]);
   })
   .then(() => {

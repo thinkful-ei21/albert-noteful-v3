@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 
-const folderSchema = new mongoose.Schema({
+const tagSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -11,10 +11,10 @@ const folderSchema = new mongoose.Schema({
 });
 
 // Add 'createdAt' and 'updatedAt' fields
-folderSchema.set('timestamps', true);
+tagSchema.set('timestamps', true);
 
 // Customize the mongoose document instance being returned
-folderSchema.set('toObject', {
+tagSchema.set('toObject', {
   virtuals: true, // include built-in virtual 'id'
   versionKey: false, // remove '__v' version key
   transform: (doc, ret) => {
@@ -22,4 +22,4 @@ folderSchema.set('toObject', {
   }
 });
 
-module.exports = mongoose.model('Folder', folderSchema);
+module.exports = mongoose.model('Tag', tagSchema);
