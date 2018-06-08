@@ -13,21 +13,36 @@ router.get('/', (req, res, next) => {
   Folder
     .find()
     .sort({name: 'asc'})
-    .then(results => res.json(results))
+    .then(results => {
+      if(results) {
+        res.json(results);
+      } else {
+        next();
+      }
+    })
     .catch(err => next(err));
 });
 
 // GET (read) folder by ID
 router.get('/:id', (req, res, next) => {
   const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    const err = new Error('The `id` is not valid');
+
+  if(!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error();
+    err.message = 'Error: Invalid folder ID.';
     err.status = 400;
     return next(err);
   }
+
   Folder
     .findById(id)
-    .then(result => res.json(result))
+    .then(result => {
+      if(result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
     .catch(err => next(err));
 });
 
@@ -35,12 +50,14 @@ router.get('/:id', (req, res, next) => {
 router.post('/', (req, res, next) => {
   const { name } = req.body;
   const newFolder = { name };
+
   if(!name) {
     const err = new Error();
     err.message = 'Error: Invalid folder name.';
     err.status = 400;
     return next(err);
   }
+
   Folder
     .create(newFolder)
     .then(result => {
@@ -50,7 +67,7 @@ router.post('/', (req, res, next) => {
         .json(result);
     })
     .catch(err => {
-      if (err.code === 11000) {
+      if(err.code === 11000) {
         err = new Error();
         err.message = 'Error: Folder already exists';
         err.status = 400;
@@ -63,31 +80,57 @@ router.post('/', (req, res, next) => {
 router.put('/:id', (req, res, next) => {
   const { id } = req.params;
   const { name } = req.body;
-  const updateFolder = { name };
-  if (!mongoose.Types.ObjectId.isValid(id)) {
+  const updateFolder = {name};
+
+  if(!name) {
+    const err = new Error();
+    err.message = 'Error: Missing `title` in request body.';
+    err.status = 400;
+    return next(err);
+  }
+  if(!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error();
     err.message = 'Error: Invalid folder ID.';
     err.status = 400;
     return next(err);
   }
-  Folder.findByIdAndUpdate(id, updateFolder, {new: true})
-    .then(result => res.json(result))
-    .catch(err => next(err));
+
+  Folder
+    .findByIdAndUpdate(id, updateFolder, {new: true})
+    .then(result => {
+      if(result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
+    .catch(err => {
+      if(err.code === 11000) {
+        err = new Error();
+        err.message = 'Error: Folder name already in use.';
+        err.status = 400;
+      }
+      next(err);
+    });
 });
 
 // DELETE (delete) a folder by ID
 router.delete('/:id', (req, res, next) => {
   const { id } = req.params;
+
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error();
     err.message = 'Error: Invalid folder ID.';
     err.status = 400;
     return next(err);
   }
-  // Folder.findByIdAndRemove(id)
+
+  // original solution: ON DELETE CASCADE
+  // Folder
+  //   .findByIdAndRemove(id)
   //   .then(() => {
   //     console.log('Deleted note id:' + id);
-  //     res.sendStatus(204);
+  //     res.status(204).end();
   //   })
 
   // ON DELETE SET NULL equivalent
@@ -108,11 +151,11 @@ router.delete('/:id', (req, res, next) => {
 
   Promise.all([folderRemovePromise, noteRemovePromise])
     .then(() => {
-      res.status(204).end();
+      res
+        .status(204)
+        .end();
     })
-    .catch(err => {
-      next(err);
-    });
+    .catch(err => next(err));
 });
 
 

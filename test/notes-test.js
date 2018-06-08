@@ -35,7 +35,7 @@ describe('NOTE TESTING', function() {
     return mongoose.disconnect();
   });
 
-  describe('GET /api/notes/', function() {
+  describe('GET /api/notes', function() {
     it('should return a list of notes', function() {
       let dbNotes;
       // 1) call DB for all notes
@@ -46,7 +46,7 @@ describe('NOTE TESTING', function() {
           // 2) call the API for all notes
           return chai
             .request(app)
-            .get('/api/notes/');
+            .get('/api/notes');
         })
         // 3) check API notes
         .then(function(apiNotes) {
@@ -77,7 +77,7 @@ describe('NOTE TESTING', function() {
           expect(apiNote).to.have.status(200);
           expect(apiNote).to.be.json;
           expect(apiNote.body).to.be.an('object');
-          expect(apiNote.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(apiNote.body).to.have.keys('id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt');
           // 4) compare DB note to API note
           expect(apiNote.body.id).to.equal(dbNote.id);
           expect(apiNote.body.title).to.equal(dbNote.title);
@@ -151,7 +151,7 @@ describe('NOTE TESTING', function() {
   });
 
   describe('PUT api/notes/:id', function() {
-    it('should update an existing note when provided a valid corresponding data', function() {
+    it('should update an existing note when provided a valid corresponding ID', function() {
       const updateNote = {
         title: 'Updated Title',
         content: 'Updated contents.'

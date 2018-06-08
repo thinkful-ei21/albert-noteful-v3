@@ -9,17 +9,26 @@ const router = express.Router();
 
 /* ========== GET/READ ALL ITEM ========== */
 router.get('/', (req, res, next) => {
-  const { searchTerm } = req.query;
+  const { searchTerm, folderId } = req.query;
   let filter = {};
 
-  if (searchTerm) {
+  if(searchTerm) {
     filter.title = {$regex: searchTerm};
+  }
+  if(folderId) {
+    filter.folderId = folderId;
   }
 
   Note
     .find(filter)
     .sort({updatedAt: 'desc'})
-    .then(results => res.json(results))
+    .then(results => {
+      if(results) {
+        res.json(results);
+      } else {
+        next();
+      }
+    })
     .catch(err => next(err));
 
   // console.log('Get All Notes');
@@ -34,9 +43,22 @@ router.get('/', (req, res, next) => {
 router.get('/:id', (req, res, next) => {
   const { id } = req.params;
 
+  if(!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error();
+    err.message = 'Error: Invalid note ID.';
+    err.status = 400;
+    return next(err);
+  }
+
   Note
     .findById(id)
-    .then(result => res.json(result))
+    .then(result => {
+      if(result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
     .catch(err => next(err));
 
   // console.log('Get a Note');
@@ -45,12 +67,19 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const { title, content } = req.body;
-  const newNote = {title, content};
+  const { title, content, folderId } = req.body;
+  const newNote = {title, content, folderId};
 
   /***** Never trust users - validate input *****/
-  if (!title) {
-    const err = new Error('Missing `title` in request body');
+  if(!title) {
+    const err = new Error();
+    err.message = 'Error: Missing `title` in request body';
+    err.status = 400;
+    return next(err);
+  }
+  if(folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
+    const err = new Error();
+    err.message = 'Error: Invalid folder ID.';
     err.status = 400;
     return next(err);
   }
@@ -72,18 +101,37 @@ router.post('/', (req, res, next) => {
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
   const { id } = req.params;
-  const { title, content } = req.body;
+  const { title, content, folderId } = req.body;
   const updateNote = {title, content};
 
-  if (!title) {
-    const err = new Error('Missing `title` in request body');
+  if(!title) {
+    const err = new Error();
+    err.message = 'Missing `title` in request body';
+    err.status = 400;
+    return next(err);
+  }
+  if(!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error();
+    err.message = 'Error: Invalid note ID.';
+    err.status = 400;
+    return next(err);
+  }
+  if(folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
+    const err = new Error();
+    err.message = 'Error: Invalid folder ID';
     err.status = 400;
     return next(err);
   }
 
   Note
     .findByIdAndUpdate(id, updateNote, {new: true})
-    .then(result => res.json(result))
+    .then(result => {
+      if(result) {
+        res.json(result);
+      } else {
+        next();
+      }
+    })
     .catch(err => next(err));
 
   // console.log('Update a Note');
@@ -93,6 +141,13 @@ router.put('/:id', (req, res, next) => {
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
   const { id } = req.params;
+
+  if(!mongoose.Types.ObjectId.isValid(id)) {
+    const err = new Error();
+    err.message = 'Error: Invalid folder ID.';
+    err.status = 400;
+    return next(err);
+  }
 
   Note
     .findByIdAndRemove(id)
