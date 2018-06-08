@@ -9,7 +9,7 @@ const router = express.Router();
 
 /* ========== GET/READ ALL ITEM ========== */
 router.get('/', (req, res, next) => {
-  const { searchTerm, folderId } = req.query;
+  const { searchTerm, folderId, tagId } = req.query;
   let filter = {};
 
   if(searchTerm) {
@@ -18,9 +18,13 @@ router.get('/', (req, res, next) => {
   if(folderId) {
     filter.folderId = folderId;
   }
+  if(tagId) {
+    filter.tags = tagId;
+  }
 
   Note
     .find(filter)
+    .populate('tags')
     .sort({updatedAt: 'desc'})
     .then(results => {
       if(results) {
@@ -52,6 +56,7 @@ router.get('/:id', (req, res, next) => {
 
   Note
     .findById(id)
+    .populate('tags')
     .then(result => {
       if(result) {
         res.json(result);
@@ -67,8 +72,8 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const { title, content, folderId } = req.body;
-  const newNote = {title, content, folderId};
+  const { title, content, folderId, tags = [] } = req.body;
+  const newNote = { title, content, folderId, tags };
 
   /***** Never trust users - validate input *****/
   if(!title) {
@@ -82,6 +87,16 @@ router.post('/', (req, res, next) => {
     err.message = 'Error: Invalid folder ID.';
     err.status = 400;
     return next(err);
+  }
+  if(tags) {
+    tags.forEach(tag => {
+      if(!mongoose.Types.ObjectId.isValid(tag)) {
+        const err = new Error();
+        err.message = 'Error: Invalid tag Id.';
+        err.status = 400;
+        return next(err);
+      }
+    });
   }
 
   Note
@@ -101,8 +116,8 @@ router.post('/', (req, res, next) => {
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
   const { id } = req.params;
-  const { title, content, folderId } = req.body;
-  const updateNote = {title, content};
+  const { title, content, folderId, tags = [] } = req.body;
+  const updateNote = {title, content, folderId, tags};
 
   if(!title) {
     const err = new Error();
@@ -118,9 +133,19 @@ router.put('/:id', (req, res, next) => {
   }
   if(folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
     const err = new Error();
-    err.message = 'Error: Invalid folder ID';
+    err.message = 'Error: Invalid folder ID.';
     err.status = 400;
     return next(err);
+  }
+  if(tags) {
+    tags.forEach(tag => {
+      if(!mongoose.Types.ObjectId.isValid(tag)) {
+        const err = new Error();
+        err.message = 'Error: Invalid tag ID.';
+        err.status = 400;
+        return next(err);
+      }
+    });
   }
 
   Note
@@ -152,7 +177,7 @@ router.delete('/:id', (req, res, next) => {
   Note
     .findByIdAndRemove(id)
     .then(() => {
-      console.log('Deleted note id:' + id);
+      console.log(`Deleted note ID ${id}`);
       res
         .status(204)
         .end();

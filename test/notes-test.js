@@ -77,7 +77,7 @@ describe('NOTE TESTING', function() {
           expect(apiNote).to.have.status(200);
           expect(apiNote).to.be.json;
           expect(apiNote.body).to.be.an('object');
-          expect(apiNote.body).to.have.keys('id', 'title', 'content', 'folderId', 'createdAt', 'updatedAt');
+          expect(apiNote.body).to.have.keys('id', 'title', 'content', 'folderId', 'tags', 'createdAt', 'updatedAt');
           // 4) compare DB note to API note
           expect(apiNote.body.id).to.equal(dbNote.id);
           expect(apiNote.body.title).to.equal(dbNote.title);
@@ -120,7 +120,9 @@ describe('NOTE TESTING', function() {
     it('should create and return a new item when provided valid data', function() {
       const newNote = {
         title: 'The best article about cats ever!',
-        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
+        content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...',
+        folderId: '111111111111111111111103',
+        tags: []
       };
       let apiResponse;
       // 1) call API to create note
@@ -134,7 +136,7 @@ describe('NOTE TESTING', function() {
           expect(apiResponse).to.have.header('location');
           expect(apiResponse).to.be.json;
           expect(apiResponse.body).to.be.an('object');
-          expect(apiResponse.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(apiResponse.body).to.have.keys('id', 'title', 'content', 'folderId', 'tags', 'createdAt', 'updatedAt');
           // 2) call DB for new note by its ID
           return Note
             .findById(apiResponse.body.id);

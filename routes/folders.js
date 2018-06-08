@@ -23,7 +23,7 @@ router.get('/', (req, res, next) => {
     .catch(err => next(err));
 });
 
-// GET (read) folder by ID
+// GET (read) a single folder by ID
 router.get('/:id', (req, res, next) => {
   const { id } = req.params;
 
@@ -69,7 +69,7 @@ router.post('/', (req, res, next) => {
     .catch(err => {
       if(err.code === 11000) {
         err = new Error();
-        err.message = 'Error: Folder already exists';
+        err.message = 'Error: Folder name already in use.';
         err.status = 400;
       }
       next(err);
@@ -118,45 +118,46 @@ router.put('/:id', (req, res, next) => {
 router.delete('/:id', (req, res, next) => {
   const { id } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
+  if(!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error();
     err.message = 'Error: Invalid folder ID.';
     err.status = 400;
     return next(err);
   }
 
-  // original solution: ON DELETE CASCADE
+  // my solution: ON DELETE CASCADE
   // Folder
   //   .findByIdAndRemove(id)
   //   .then(() => {
-  //     console.log('Deleted note id:' + id);
-  //     res.status(204).end();
+  //     console.log(`Deleted folder ID ${id}`);
+  //     res
+  //       .status(204)
+  //       .end();
   //   })
-
-  // ON DELETE SET NULL equivalent
   //   .then(() => {
   //     Note.deleteMany({folderId: id});
   //   })
   //   .catch(err => next(err));
 
-  // ON DELETE SET NULL equivalent
-  const folderRemovePromise = Folder.findByIdAndRemove(id);
+  // better solution: ON DELETE SET NULL
+  const removeFolderPromise = Folder.findByIdAndRemove(id);
   // ON DELETE CASCADE equivalent
-  // const noteRemovePromise = Note.deleteMany({ folderId: id });
-
-  const noteRemovePromise = Note.updateMany(
-    { folderId: id },
-    { $unset: { folderId: '' } }
+  // const removeNoteFolderPromise = Note.deleteMany({folderId: id});
+  // ON DELETE SET NULL equivalent
+  const removeNoteFolderPromise = Note.updateMany(
+    {folderId: id},
+    {$unset: {folderId: ''}} // review!!!
   );
 
-  Promise.all([folderRemovePromise, noteRemovePromise])
+  Promise
+    .all([removeFolderPromise, removeNoteFolderPromise])
     .then(() => {
+      console.log(`Deleted folder ID ${id}`);
       res
         .status(204)
         .end();
     })
     .catch(err => next(err));
 });
-
 
 module.exports = router;
