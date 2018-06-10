@@ -7,7 +7,7 @@ const Note = require('../models/note.js');
 
 const router = express.Router();
 
-/* ========== GET/READ ALL ITEM ========== */
+// GET (read) all notes and sorted by updatedAt
 router.get('/', (req, res, next) => {
   const { searchTerm, folderId, tagId } = req.query;
   let filter = {};
@@ -43,7 +43,7 @@ router.get('/', (req, res, next) => {
   // ]);
 });
 
-/* ========== GET/READ A SINGLE ITEM ========== */
+// GET (read) a single note by ID
 router.get('/:id', (req, res, next) => {
   const { id } = req.params;
 
@@ -70,9 +70,9 @@ router.get('/:id', (req, res, next) => {
   // res.json({ id: 1, title: 'Temp 1' });
 });
 
-/* ========== POST/CREATE AN ITEM ========== */
+// POST (create) a new note
 router.post('/', (req, res, next) => {
-  const { title, content, folderId, tags = [] } = req.body;
+  const { title, content, folderId, tags = [ ] } = req.body; // tags variable assignment here is an array deconstructer; if req.body.tags exists, its values will be saved in tags array;
   const newNote = { title, content, folderId, tags };
 
   /***** Never trust users - validate input *****/
@@ -87,6 +87,9 @@ router.post('/', (req, res, next) => {
     err.message = 'Error: Invalid folder ID.';
     err.status = 400;
     return next(err);
+  }
+  if(!folderId) {
+    newNote.folderId = null;
   }
   if(tags) {
     tags.forEach(tag => {
@@ -113,10 +116,10 @@ router.post('/', (req, res, next) => {
   // res.location('path/to/new/document').status(201).json({ id: 2, title: 'Temp 2' });
 });
 
-/* ========== PUT/UPDATE A SINGLE ITEM ========== */
+// PUT (update) a note by ID
 router.put('/:id', (req, res, next) => {
   const { id } = req.params;
-  const { title, content, folderId, tags = [] } = req.body;
+  const { title, content, folderId, tags = [ ] } = req.body; // tags variable assignment here is an array deconstructer; if req.body.tags exists, its values will be saved in tags array;
   const updateNote = {title, content, folderId, tags};
 
   if(!title) {
@@ -136,6 +139,9 @@ router.put('/:id', (req, res, next) => {
     err.message = 'Error: Invalid folder ID.';
     err.status = 400;
     return next(err);
+  }
+  if(!folderId) {
+    updateNote.folderId = null;
   }
   if(tags) {
     tags.forEach(tag => {
@@ -163,7 +169,7 @@ router.put('/:id', (req, res, next) => {
   // res.json({ id: 1, title: 'Updated Temp 1' });
 });
 
-/* ========== DELETE/REMOVE A SINGLE ITEM ========== */
+// DELETE (delete) a note by ID
 router.delete('/:id', (req, res, next) => {
   const { id } = req.params;
 
@@ -183,6 +189,7 @@ router.delete('/:id', (req, res, next) => {
         .end();
     })
     .catch(err => next(err));
+
   // console.log('Delete a Note');
   // res.status(204).end();
 });
