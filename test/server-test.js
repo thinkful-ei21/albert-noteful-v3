@@ -8,7 +8,6 @@ const chaiHttp = require('chai-http');
 // process.stdout.write("\x1Bc\n");
 
 const expect = chai.expect;
-
 chai.use(chaiHttp);
 
 describe('Reality Check', function() {
@@ -27,7 +26,7 @@ describe('Environment', function() {
   });
 });
 
-describe('Basic Express setup', function() {
+describe('SERVER TEST', function() {
 
   describe('Express static', function() {
     it('GET request "/" should return the index page', function() {

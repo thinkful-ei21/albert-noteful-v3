@@ -1,20 +1,16 @@
 'use strict';
 
+const app = require('../server.js');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const mongoose = require('mongoose');
 
-const app = require('../server.js');
+const expect = chai.expect;
+chai.use(chaiHttp);
 
 const { TEST_MONGODB_URI } = require('../config.js');
-
 const Note = require('../models/note.js');
-
 const seedNotes = require('../db/seed/notes.json');
-
-const expect = chai.expect;
-
-chai.use(chaiHttp);
 
 describe('NOTE TESTING', function() {
 
